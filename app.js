@@ -13,7 +13,9 @@ if (!dbExists) {
   console.log("Creating database file");
   fs.openSync(dbFile, "w");
     createCircleOnDatabase();
+    createPlayerOnDatabase();
 }
+
 createAllFood();
 
 function createCircleOnDatabase(){
@@ -27,6 +29,18 @@ function createCircleOnDatabase(){
           "fill TEXT, " +
           "stroke TEXT, " +
           "stroke_width INT)");
+}
+
+function createPlayerOnDatabase(){
+  db.run("CREATE TABLE players (" +
+          "id INT PRIMARY KEY, " +
+          "id_circle INT REFERENCES circles(id), " +
+          "name TEXT, " +
+          "time_alive TEXT, " +
+          "food_eaten INT, " +
+          "delay INT, " +
+          "ranking INT, " +
+          "alive INT)");
 }
 
 function insertCircleOnDatabase(circle) {
@@ -58,16 +72,22 @@ function getFoodsFromDatabase(callback) {
 
 function createAllFood(){
   for (var i = 1; i <= 100; i++){
-    newFood(i, "#000");
+    newFood(i, randomColors());
   }
 }
 
 function newFood(i, color){
+  console.log(color);
   var x = Math.floor(Math.random() * 990);
   var y = Math.floor(Math.random() * 640);
   var food = { id: i, r: 6, cx: x, cy: y, nx: x, ny: y, fill: color, stroke: color, stroke_width: 1 };
   insertCircleOnDatabase(food);
 }
+
+function randomColors(){
+   var colors = ["#ff1a1a", "#3366ff", "#33cc33", "#ffff00", "#ff0066", "#ff471a", "#cc0099"];
+   return colors[Math.floor(Math.random() * colors.length)];;
+  }
 
 app.use("/public", express.static(__dirname + '/public'));
 
