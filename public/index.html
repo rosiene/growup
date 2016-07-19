@@ -1,10 +1,25 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script type='text/javascript' src='socket.io/socket.io.js'></script>
+
     <meta charset="utf-8">
     <title>Grow Up!</title>
   </head>
   <body>
     <h1>Grow Up!</h1>
+    <form>
+      <label>Name: </label>
+      <input ref="name" type="text" />
+      <label>Color: </label>
+      <select ref="colorList">
+        <option ref="color" value="#3366ff">Blue</option>
+        <option ref="color" value="#ff0000">Red</option>
+        <option ref="color" value="#2eb82e">Green</option>
+        <option ref="color" value="#b800e6">Purple</option>
+        <option ref="color" value="#ffcc00">Yellow</option>
+      </select>
+      <input type="submit" value="Start" />
+    </form>
   </body>
 </html>
