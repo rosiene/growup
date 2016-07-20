@@ -199,4 +199,8 @@ io.on('connection', function(socket) {
   socket.on('updateCircle', function (circle) {
     updateCircle(circle);
   });
+
+  socket.on('updatePlayer', function (player) {
+    updatePlayer(player);
+  });
 });

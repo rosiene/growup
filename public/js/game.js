@@ -6,6 +6,7 @@ runGame();
 
 function runGame(){
   setTimeout(function(){
+    console.log(currentPlayer.score);
     socket.emit('updatePlayerCircle', currentCircle);
     socket.on('circles', function(circles) {
       updateGame(circles);
@@ -23,7 +24,7 @@ function updateGame(circles){
       updateElement(circle);
     }
     if(circle.id != currentCircle.id && currentCircle.id != null){
-      eat(circle);
+      currentEat(circle);
     }
   });
 }
@@ -61,6 +62,12 @@ function setPlayer(event){
   });
 }
 
+function currentGrow(circle){
+  newSize =  parseFloat(currentCircle.r) + parseFloat(circle.r)/30;
+  currentCircle.r = newSize.toFixed(1);
+  socket.emit('updateCircle', currentCircle);
+}
+
 function newPosition(x, y){
   currentCircle.cx = x;
   currentCircle.cy = y;
@@ -71,7 +78,7 @@ function randomColors(){
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
-function eat(circle){
+function currentEat(circle){
   var startX = parseInt(currentCircle.cx) - parseInt(currentCircle.r);
   var startY = parseInt(currentCircle.cy) - parseInt(currentCircle.r);
   var endX = parseInt(currentCircle.cx) + parseInt(currentCircle.r);
@@ -85,7 +92,10 @@ function eat(circle){
       circle.cx = Math.floor(Math.random() * 990);
       circle.cy = Math.floor(Math.random() * 640);
       circle.fill = randomColors();
+      currentPlayer.score = 1 + parseInt(currentPlayer.score);
+      currentGrow(circle);
       socket.emit('updateCircle', circle);
+      socket.emit('updatePlayer', currentPlayer);
     }
   }
 }
