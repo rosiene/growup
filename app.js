@@ -12,62 +12,108 @@ var db = new sqlite3.Database(dbFile);
 if (!dbExists) {
   console.log("Creating database file");
   fs.openSync(dbFile, "w");
-    createCircleOnDatabase();
-    createPlayerOnDatabase();
+    createCircle();
+    createPlayer();
+    setTimeout(function() {
+      createAllFood()
+    }, 50);
 }
 
-createAllFood();
-
-function createCircleOnDatabase(){
+function createCircle(){
   db.run("CREATE TABLE circles (" +
           "id INT PRIMARY KEY, " +
           "r INT, " +
           "cx INT, " +
           "cy INT, " +
-          "nx INT, " +
-          "ny INT, " +
           "fill TEXT, " +
-          "stroke TEXT, " +
-          "stroke_width INT)");
+          "type TEXT)");
 }
 
-function createPlayerOnDatabase(){
+function createPlayer(){
   db.run("CREATE TABLE players (" +
           "id INT PRIMARY KEY, " +
           "id_circle INT REFERENCES circles(id), " +
           "name TEXT, " +
-          "time_alive TEXT, " +
-          "food_eaten INT, " +
+          "score INT, " +
           "delay INT, " +
           "ranking INT, " +
           "alive INT)");
 }
 
-function insertCircleOnDatabase(circle) {
+function insertCircle(circle) {
   console.log(circle);
-  db.run("INSERT INTO circles VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  db.run("INSERT INTO circles VALUES (?, ?, ?, ?, ?, ?)",
     [circle.id
       , circle.r
       , circle.cx
       , circle.cy
-      , circle.nx
-      , circle.ny
       , circle.fill
-      , circle.stroke
-      , circle.stroke_width
+      , circle.type
     ]
   );
 }
 
-function getFoodsFromDatabase(callback) {
-  db.all("SELECT * FROM circles"
-          , function(err, foods) {
+function insertPlayer(player) {
+  console.log(player);
+  db.run("INSERT INTO player VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [player.id
+      , player.id_circle
+      , player.name
+      , player.score
+      , player.delay
+      , player.ranking
+      , player.alive
+    ]
+  );
+}
+
+function updateCircle(circle) {
+  console.log(circle);
+  db.run("UPDATE circles SET r = ?, cx =  ?, cy =  ?, fill = ? " +
+          "WHERE id = ?",
+    [circle.r
+      , circle.cx
+      , circle.cy
+      , circle.fill
+      , circle.id
+    ]
+  );
+  io.emit('circle', circle);
+}
+
+function updatePlayer(player) {
+  console.log(circle);
+  db.run("UPDATE player SET score = ?, delay = ?, ranking = ?, alive = ? " +
+          "WHERE id = ?",
+    [player.id
+      , player.score
+      , player.delay
+      , player.ranking
+      , player.alive
+    ]
+  );
+}
+
+function getCircles(callback) {
+  db.all("SELECT circles.* FROM circles " +
+        "LEFT JOIN players ON circles.id = players.id_circle " +
+        "WHERE players.alive = 1 OR circles.type = 'FOOD'"
+          , function(err, circle) {
     if (err) {
-      console.log("error: " + err);
+      console.log("getCircles error: " + err);
       return;
     }
-    callback(foods);
+    callback(circle);
   });
+}
+
+function newPlayer(name){
+  var id_circle = 102;
+  var circle = {id: id_circle, r: 20, cx: 500, cy: 300, fill: "#b800e6", type: "PLAYER" };
+  insertCircle(circle);
+
+  var player = {id: 1, 101: id_circle, name: name, score: 0, delay: 0, ranking: 0, alive: 1 };
+  insertPlayer(player);
 }
 
 function createAllFood(){
@@ -77,17 +123,16 @@ function createAllFood(){
 }
 
 function newFood(i, color){
-  console.log(color);
   var x = Math.floor(Math.random() * 990);
   var y = Math.floor(Math.random() * 640);
-  var food = { id: i, r: 6, cx: x, cy: y, nx: x, ny: y, fill: color, stroke: color, stroke_width: 1 };
-  insertCircleOnDatabase(food);
+  var food = { id: i, r: 6, cx: x, cy: y, fill: color, type: "FOOD"};
+  insertCircle(food);
 }
 
 function randomColors(){
-   var colors = ["#ff1a1a", "#3366ff", "#33cc33", "#ffff00", "#ff0066", "#ff471a", "#cc0099"];
-   return colors[Math.floor(Math.random() * colors.length)];;
-  }
+  var colors = ["#ff1a1a", "#3366ff", "#33cc33", "#ffff00", "#ff0066", "#ff471a", "#cc0099"];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
 
 app.use("/public", express.static(__dirname + '/public'));
 
@@ -102,9 +147,8 @@ http.listen(3000, function() {
 io.on('connection', function(socket) {
   console.log('connected');
 
-  getFoodsFromDatabase(function(foods) {
-    if (!foods) foods = [];
-    socket.emit('foods', foods);
+  getCircles(function(circle) {
+    if (!circle) circle = [];
+    socket.emit('circles', circle);
   });
-
 });

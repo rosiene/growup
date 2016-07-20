@@ -27,8 +27,6 @@ h1{
   padding: 20px;
   border-radius: 10px;
   text-align: center;
-  opacity: 0.9;
-  filter: alpha(opacity=90);
 }
 
 .form .name{
