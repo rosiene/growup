@@ -63,6 +63,7 @@ function insertPlayer(player) {
       , player.alive
     ]
   );
+
 }
 
 function updateCircle(circle) {
@@ -75,6 +76,7 @@ function updateCircle(circle) {
       , circle.id
     ]
   );
+  io.emit('circle', circle);
 }
 
 function updatePlayer(player) {
@@ -87,22 +89,48 @@ function updatePlayer(player) {
       , player.alive
     ]
   );
+  io.emit('player', player);
+}
+
+function killPlayer(circle) {
+  db.run("UPDATE players SET alive = 0 " +
+          "WHERE id_circle = ?",
+    [circle.id]
+  );
 }
 
 function getCircles(callback) {
   db.all("SELECT circles.* FROM circles " +
            "LEFT JOIN players ON circles.id = players.id_circle " +
           "WHERE players.alive = 1 OR circles.type = 'FOOD'"
-          , function(err, circle) {
+          , function(err, circles) {
     if (err) {
       console.log("getCircles error: " + err);
       return;
     }
-    callback(circle);
+    callback(circles);
   });
 }
 
-function newPlayer(name, callback){
+function loadCircles(callback){
+  getCircles(function(circles) {
+    if (!circles) circles = [];
+    io.emit('circles', circles);
+  });
+}
+
+function getPlayers(callback) {
+  db.all("SELECT * FROM players"
+          , function(err, players) {
+    if (err) {
+      console.log("getPlayers error: " + err);
+      return;
+    }
+    callback(players);
+  });
+}
+
+function newPlayerAndCircle(name, callback){
 
   var newCircle = {};
   var newPlayer = {};
@@ -179,20 +207,17 @@ io.on('connection', function(socket) {
 
   getCircles(function(circles) {
     if (!circles) circles = [];
-    socket.emit('start-circles', circles);
+    socket.emit('circles', circles);
   });
 
-  socket.on('newPlayer', function (name) {
-    newPlayer(name, function(player, circle){
+  getPlayers(function(players) {
+    if (!players) players = [];
+    socket.emit('players', players);
+  });
+
+  socket.on('newPlayerAndCircle', function (name, circles) {
+    newPlayerAndCircle(name, function(player, circle){
       socket.emit('player-circle', player, circle);
-    });
-  });
-
-  socket.on('updatePlayerCircle', function (circle) {
-    updateCircle(circle);
-    getCircles(function(circles) {
-      if (!circles) circles = [];
-      socket.emit('circles', circles);
     });
   });
 
@@ -203,4 +228,13 @@ io.on('connection', function(socket) {
   socket.on('updatePlayer', function (player) {
     updatePlayer(player);
   });
+
+  socket.on('killPlayer', function (circle) {
+    killPlayer(circle);
+  });
+
+  socket.on('loadCircles', function (circles) {
+    loadCircles(circles);
+  });
+
 });
