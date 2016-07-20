@@ -41,7 +41,6 @@ function createPlayer(){
 }
 
 function insertCircle(circle) {
-  console.log("insertCircle ", circle);
   db.run("INSERT INTO circles VALUES (?, ?, ?, ?, ?, ?)",
     [circle.id
       , circle.r
@@ -54,7 +53,6 @@ function insertCircle(circle) {
 }
 
 function insertPlayer(player) {
-  console.log("insertPlayer ", player);
   db.run("INSERT INTO players VALUES (?, ?, ?, ?, ?, ?, ?)",
     [player.id
       , player.id_circle
@@ -80,7 +78,6 @@ function updateCircle(circle) {
 }
 
 function updatePlayer(player) {
-  console.log(player);
   db.run("UPDATE players SET score = ?, delay = ?, ranking = ?, alive = ? " +
           "WHERE id = ?",
     [player.id
@@ -131,7 +128,6 @@ function setCircle(callback){
       next[0].id = 1;
     }
     var circle = {id: next[0].id, r: 20, cx: 500, cy: 300, fill: "#ff0000", type: "PLAYER" };
-    console.log("setCircle: ", circle);
     callback(circle);
   });
 }
@@ -146,7 +142,6 @@ function setPlayer(circle, name, callback){
       next[0].id = 1;
     }
     var player = {id: next[0].id, id_circle: circle.id, name: name, score: 0, delay: 0, ranking: 0, alive: 1 };
-    console.log("setPlayer: ", player);
     callback(player);
   });
 }
@@ -193,11 +188,15 @@ io.on('connection', function(socket) {
     });
   });
 
-  socket.on('updateCircle', function (circle) {
+  socket.on('updatePlayerCircle', function (circle) {
     updateCircle(circle);
     getCircles(function(circles) {
       if (!circles) circles = [];
       socket.emit('circles', circles);
     });
+  });
+
+  socket.on('updateCircle', function (circle) {
+    updateCircle(circle);
   });
 });
