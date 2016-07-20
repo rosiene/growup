@@ -76,20 +76,18 @@ function updateCircle(circle) {
       , circle.id
     ]
   );
-  io.emit('circle', circle);
 }
 
 function updatePlayer(player) {
   db.run("UPDATE players SET score = ?, delay = ?, ranking = ?, alive = ? " +
           "WHERE id = ?",
-    [player.id
-      , player.score
+      [player.score
       , player.delay
       , player.ranking
       , player.alive
+      , player.id
     ]
   );
-  io.emit('player', player);
 }
 
 function killPlayer(circle) {
@@ -112,10 +110,28 @@ function getCircles(callback) {
   });
 }
 
-function loadCircles(callback){
+function load(){
   getCircles(function(circles) {
     if (!circles) circles = [];
     io.emit('circles', circles);
+  });
+
+  getPlayers(function(players) {
+    if (!players) players = [];
+    io.emit('players', players);
+  });
+}
+
+function getPlayer(player, callback) {
+  console.log(player)
+  db.all("SELECT * FROM players " +
+          "WHERE id = ? ", [player.id]
+          , function(err, players) {
+    if (err) {
+      console.log("getPlayers error: " + err);
+      return;
+    }
+    callback(players[0]);
   });
 }
 
@@ -233,8 +249,8 @@ io.on('connection', function(socket) {
     killPlayer(circle);
   });
 
-  socket.on('loadCircles', function (circles) {
-    loadCircles(circles);
+  socket.on('load', function () {
+    load();
   });
 
 });

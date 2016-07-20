@@ -22,11 +22,13 @@
           <span style="color: #ffff00">w  </span>
           <span style="color: #ff0066">U</span>
           <span style="color: #ff471a">p</span>
-          <span style="color: #cc0099">!</span></h1>
+          <span style="color: #cc0099">!</span>
+        </h1>
+        <h3><span id="n_players"></span>  players online</h3>
         <form onsubmit="setPlayer(event)">
-          <input class="name" ref="name" type="text" placeholder="What's your name?" />
+          <input id="name" class="name" ref="name" type="text" placeholder="What's your name?" />
           <br />
-          <input class="submit" type="submit" value="Start" />
+          <input id="submit" class="submit" type="submit" value="Start" />
         </form>
       </div>
       <svg id="board" class="board" width="1200" height="650">
