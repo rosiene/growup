@@ -1,62 +1,64 @@
-
 var socket = io();
-var circles = [];
-var circlePlayer = {};
-var player = {};
+var currentCircle = {};
+var currentPlayer = {};
 
-$('.form').css("display", "none");
+runGame();
 
-var startGame = function(circles) {
-  var svg = document.getElementById("board");
-
-  circles.forEach(function(circle) {
-    var circleElement = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    circleElement.setAttribute("id", circle.id);
-    circleElement.setAttribute("r", circle.r);
-    circleElement.setAttribute("cx", circle.cx);
-    circleElement.setAttribute("cy", circle.cy);
-    circleElement.setAttribute("fill", circle.fill);
-    svg.appendChild(circleElement);
-  });
-};
-
-socket.on('circles', function(circles) {
-  startGame(circles);
-});
-
-
-socket.on('circleByPlayer', function(circle) {
-  circlePlayer = circle;
-});
-
-function setPlayer(event){
-  event.preventDefault();
-  var nome = event.target[0].value;
-  $('.form').css("display", "none");
-  socket.emit('newPlayer', name);
+function runGame(){
+  setTimeout(function(){
+    socket.emit('updateCircle', currentCircle);
+    socket.on('circles', function(circles) {
+      updateGame(circles);
+    });
+    runGame();
+  }, 100);
 }
 
-function newPosition(x, y){
-  circlePlayer.cx = x;
-  circlePlayer.cy = y;
-  console.log(circlePlayer);
+function updateGame(circles){
+  circles.forEach(function(circle) {
+    var circleElement = document.getElementById(circle.id);
+    if(circleElement == null){
+      newElement(circle)
+    }else{
+      updateElement(circle);
+    }
+  });
+}
+
+function newElement(circle){
+  var svg = document.getElementById("board");
+  var circleElement = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circleElement.setAttribute("id", circle.id);
+  circleElement.setAttribute("r", circle.r);
+  circleElement.setAttribute("cx", circle.cx);
+  circleElement.setAttribute("cy", circle.cy);
+  circleElement.setAttribute("fill", circle.fill);
+  svg.appendChild(circleElement);
 }
 
 function updateElement(circle){
-  var circleElement = $('#'+circle.id);
-  circleElement.attr("r", circle.r);
-  circleElement.attr("cx", circle.cx);
-  circleElement.attr("cy", circle.cy);
-  circleElement.attr("fill", circle.fill);
-  circleElement.attr("stroke", circle.stroke);
-  circleElement.attr("stroke_width", circle.stroke_width);
+  var circleElement = document.getElementById(circle.id);
+  circleElement.setAttribute("r", circle.r);
+  circleElement.setAttribute("cx", circle.cx);
+  circleElement.setAttribute("cy", circle.cy);
+  circleElement.setAttribute("fill", circle.fill);
 }
 
-window.addEventListener('mousemove', function(event){
-  newPosition(event.clientX, event.clientY)
-});
+function setPlayer(event){
+  event.preventDefault();
+  var name = event.target[0].value;
+  $('.form').css("display", "none");
+  socket.emit('newPlayer', name);
+  socket.on('player-circle', function(player, circle){
+    currentPlayer = player;
+    currentCircle = circle;
+  });
+  window.addEventListener('mousemove', function(event){
+    newPosition(event.clientX, event.clientY)
+  });
+}
 
-socket.on('circle', function(circle) {
-  console.log(circle);
-  updateElement(circle);
-});
+function newPosition(x, y){
+  currentCircle.cx = x;
+  currentCircle.cy = y;
+}

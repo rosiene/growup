@@ -41,7 +41,7 @@ function createPlayer(){
 }
 
 function insertCircle(circle) {
-  console.log(circle);
+  console.log("insertCircle ", circle);
   db.run("INSERT INTO circles VALUES (?, ?, ?, ?, ?, ?)",
     [circle.id
       , circle.r
@@ -54,8 +54,8 @@ function insertCircle(circle) {
 }
 
 function insertPlayer(player) {
-  console.log(player);
-  db.run("INSERT INTO player VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  console.log("insertPlayer ", player);
+  db.run("INSERT INTO players VALUES (?, ?, ?, ?, ?, ?, ?)",
     [player.id
       , player.id_circle
       , player.name
@@ -68,7 +68,6 @@ function insertPlayer(player) {
 }
 
 function updateCircle(circle) {
-  console.log(circle);
   db.run("UPDATE circles SET r = ?, cx =  ?, cy =  ?, fill = ? " +
           "WHERE id = ?",
     [circle.r
@@ -78,12 +77,11 @@ function updateCircle(circle) {
       , circle.id
     ]
   );
-  io.emit('circle', circle);
 }
 
 function updatePlayer(player) {
-  console.log(circle);
-  db.run("UPDATE player SET score = ?, delay = ?, ranking = ?, alive = ? " +
+  console.log(player);
+  db.run("UPDATE players SET score = ?, delay = ?, ranking = ?, alive = ? " +
           "WHERE id = ?",
     [player.id
       , player.score
@@ -96,8 +94,8 @@ function updatePlayer(player) {
 
 function getCircles(callback) {
   db.all("SELECT circles.* FROM circles " +
-        "LEFT JOIN players ON circles.id = players.id_circle " +
-        "WHERE players.alive = 1 OR circles.type = 'FOOD'"
+           "LEFT JOIN players ON circles.id = players.id_circle " +
+          "WHERE players.alive = 1 OR circles.type = 'FOOD'"
           , function(err, circle) {
     if (err) {
       console.log("getCircles error: " + err);
@@ -107,13 +105,50 @@ function getCircles(callback) {
   });
 }
 
-function newPlayer(name){
-  var id_circle = 102;
-  var circle = {id: id_circle, r: 20, cx: 500, cy: 300, fill: "#b800e6", type: "PLAYER" };
-  insertCircle(circle);
+function newPlayer(name, callback){
 
-  var player = {id: 1, 101: id_circle, name: name, score: 0, delay: 0, ranking: 0, alive: 1 };
-  insertPlayer(player);
+  var newCircle = {};
+  var newPlayer = {};
+
+  setCircle(function(circle){
+    insertCircle(circle);
+    newCircle = circle;
+    setPlayer(newCircle, name, function(player){
+      insertPlayer(player);
+      newPlayer = player;
+      callback(newPlayer, newCircle);
+    });
+  });
+}
+
+function setCircle(callback){
+  db.all("SELECT (MAX(circles.id) + 1) id FROM circles ", function(err, next) {
+    if (err) {
+      console.log("getNextIdCircle error: " + err);
+      return;
+    }
+    if (next[0].id === null){
+      next[0].id = 1;
+    }
+    var circle = {id: next[0].id, r: 20, cx: 500, cy: 300, fill: "#ff0000", type: "PLAYER" };
+    console.log("setCircle: ", circle);
+    callback(circle);
+  });
+}
+
+function setPlayer(circle, name, callback){
+  db.all("SELECT (MAX(players.id) + 1) id FROM players ", function(err, next) {
+    if (err) {
+      console.log("getNextIdPlayers error: " + err);
+      return;
+    }
+    if (next[0].id === null){
+      next[0].id = 1;
+    }
+    var player = {id: next[0].id, id_circle: circle.id, name: name, score: 0, delay: 0, ranking: 0, alive: 1 };
+    console.log("setPlayer: ", player);
+    callback(player);
+  });
 }
 
 function createAllFood(){
@@ -147,8 +182,22 @@ http.listen(3000, function() {
 io.on('connection', function(socket) {
   console.log('connected');
 
-  getCircles(function(circle) {
-    if (!circle) circle = [];
-    socket.emit('circles', circle);
+  getCircles(function(circles) {
+    if (!circles) circles = [];
+    socket.emit('start-circles', circles);
+  });
+
+  socket.on('newPlayer', function (name) {
+    newPlayer(name, function(player, circle){
+      socket.emit('player-circle', player, circle);
+    });
+  });
+
+  socket.on('updateCircle', function (circle) {
+    updateCircle(circle);
+    getCircles(function(circles) {
+      if (!circles) circles = [];
+      socket.emit('circles', circles);
+    });
   });
 });
