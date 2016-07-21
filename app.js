@@ -36,7 +36,6 @@ function createPlayer(){
           "name TEXT, " +
           "score INT, " +
           "delay INT, " +
-          "ranking INT, " +
           "alive INT)");
 }
 
@@ -53,13 +52,12 @@ function insertCircle(circle) {
 }
 
 function insertPlayer(player) {
-  db.run("INSERT INTO players VALUES (?, ?, ?, ?, ?, ?, ?)",
+  db.run("INSERT INTO players VALUES (?, ?, ?, ?, ?, ?)",
     [player.id
       , player.id_circle
       , player.name
       , player.score
       , player.delay
-      , player.ranking
       , player.alive
     ]
   );
@@ -79,11 +77,10 @@ function updateCircle(circle) {
 }
 
 function updatePlayer(player) {
-  db.run("UPDATE players SET score = ?, delay = ?, ranking = ?, alive = ? " +
+  db.run("UPDATE players SET score = ?, delay = ?, alive = ? " +
           "WHERE id = ?",
       [player.score
       , player.delay
-      , player.ranking
       , player.alive
       , player.id
     ]
@@ -185,7 +182,7 @@ function setPlayer(circle, name, callback){
     if (next[0].id === null){
       next[0].id = 1;
     }
-    var player = {id: next[0].id, id_circle: circle.id, name: name, score: 0, delay: 0, ranking: 0, alive: 1 };
+    var player = {id: next[0].id, id_circle: circle.id, name: name, score: 0, delay: 1, alive: 1 };
     callback(player);
   });
 }
