@@ -171,7 +171,7 @@ function setCircle(callback){
     if (next[0].id === null){
       next[0].id = 1;
     }
-    var circle = {id: next[0].id, r: 20, cx: 500, cy: 300, fill: "#ff0000", type: "PLAYER" };
+    var circle = {id: next[0].id, r: 20, cx: 500, cy: 300, fill: randomColors(), type: "PLAYER" };
     callback(circle);
   });
 }

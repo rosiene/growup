@@ -18,21 +18,23 @@ runGame();
 function runGame(){
   setTimeout(function () {
     socket.emit('load');
+
     count_players();
 
     var player = getCurrentPlayerByCircle(currentCircle.id);
 
     if(player != undefined){
-      socket.emit('updateCircle', currentCircle);
-      currentCircles.forEach(function(circle){
-        if(circle.id != currentCircle.id){
-          currentEat(circle);
-        }
-      });
-    }else{
-      $('.form').css("display", "inline");
+      if (player.alive === 1){
+        socket.emit('updateCircle', currentCircle);
+        currentCircles.forEach(function(circle){
+          if(circle.id != currentCircle.id){
+            currentEat(circle);
+          }
+        });
+      }else{
+        $('.form').css("display", "inline");
+      }
     }
-
     runGame();
   }, 100);
 }
@@ -45,6 +47,7 @@ function count_players(){
 
 function setPlayer(event){
   event.preventDefault();
+
   $('.form').css("display", "none");
 
   var name = event.target[0].value;
@@ -54,16 +57,21 @@ function setPlayer(event){
     socket.emit('load');
   });
   window.addEventListener('mousemove', function(event){
-    newPosition(event.clientX, event.clientY)
+    newPosition(event.clientX, event.clientY);
   });
 }
 
 function updateGame(circles){
   circles.forEach(function(circle) {
     var circleElement = document.getElementById(circle.id);
-    if(circleElement == null){
+    if (circleElement == null){
       newElement(circle)
     }else{
+      if (circle.type == 'PLAYER'){
+        if (getCurrentPlayerByCircle(circle.id).alive === 0){
+          deleteElement(circle);
+        }
+      }
       updateElement(circle);
     }
   });
@@ -130,8 +138,6 @@ function currentEat(circle){
         var player = getCurrentPlayerByCircle(circle.id);
         player.alive = 0;
         socket.emit('updatePlayer', player);
-        console.log(currentCircle);
-        console.log(circle);
       }
     }
   }
