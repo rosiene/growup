@@ -187,8 +187,8 @@ function createAllFood(){
 }
 
 function newFood(i, color){
-  var x = Math.floor(Math.random() * 3000);
-  var y = Math.floor(Math.random() * 2000);
+  var x = Math.floor(Math.random() * 1150);
+  var y = Math.floor(Math.random() * 600);
   var food = { id: i, r: 6, cx: x, cy: y, fill: color, type: "FOOD"};
   insertCircle(food);
 }
