@@ -87,13 +87,6 @@ function updatePlayer(player) {
   );
 }
 
-function killPlayer(circle) {
-  db.run("UPDATE players SET alive = 0 " +
-          "WHERE id_circle = ?",
-    [circle.id]
-  );
-}
-
 function getCircles(callback) {
   db.all("SELECT circles.* FROM circles " +
            "LEFT JOIN players ON circles.id = players.id_circle " +
@@ -211,8 +204,10 @@ app.get('/', function(req, res) {
   res.sendFile(__dirname + '/public/index.html');
 });
 
-http.listen(3000, function() {
-  console.log('Server listening on port 3000...');
+var port = process.env.PORT || 3030;
+
+http.listen(port, function() {
+  console.log('Server listening on port 3030...');
 });
 
 io.on('connection', function(socket) {
@@ -240,10 +235,6 @@ io.on('connection', function(socket) {
 
   socket.on('updatePlayer', function (player) {
     updatePlayer(player);
-  });
-
-  socket.on('killPlayer', function (circle) {
-    killPlayer(circle);
   });
 
   socket.on('load', function () {
