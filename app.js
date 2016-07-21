@@ -181,14 +181,14 @@ function setPlayer(circle, name, callback){
 }
 
 function createAllFood(){
-  for (var i = 1; i <= 100; i++){
+  for (var i = 1; i <= 500; i++){
     newFood(i, randomColors());
   }
 }
 
 function newFood(i, color){
-  var x = Math.floor(Math.random() * 990);
-  var y = Math.floor(Math.random() * 640);
+  var x = Math.floor(Math.random() * 3000);
+  var y = Math.floor(Math.random() * 2000);
   var food = { id: i, r: 6, cx: x, cy: y, fill: color, type: "FOOD"};
   insertCircle(food);
 }
@@ -204,10 +204,10 @@ app.get('/', function(req, res) {
   res.sendFile(__dirname + '/public/index.html');
 });
 
-var port = process.env.PORT || 3030;
+var port = process.env.PORT || 3000;
 
 http.listen(port, function() {
-  console.log('Server listening on port 3030...');
+  console.log('Server listening on port 3000...');
 });
 
 io.on('connection', function(socket) {
