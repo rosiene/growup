@@ -181,7 +181,7 @@ function setPlayer(circle, name, callback){
 }
 
 function createAllFood(){
-  for (var i = 1; i <= 500; i++){
+  for (var i = 1; i <= 100; i++){
     newFood(i, randomColors());
   }
 }
