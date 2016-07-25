@@ -7,6 +7,10 @@ var circles = [];
 var players = [];
 var ranking = [];
 
+if(circles.length === 0){
+  createAllFood();
+}
+
 function getCircles(callback){
   callback(circles);
 }
@@ -76,6 +80,24 @@ function getNextIdPlayer(){
 function load(){
   io.emit('circles', circles);
   io.emit('players', players);
+}
+
+function createAllFood(){
+  for (var i = 1; i <= 500; i++){
+    newFood(i, randomColors());
+  }
+}
+
+function newFood(i, color){
+  var x = Math.floor(Math.random() * 2990);
+  var y = Math.floor(Math.random() * 1990);
+  var food = { id: i, r: 6, cx: x, cy: y, fill: color, type: "FOOD"};
+  insertCircle(food);
+}
+
+function randomColors(){
+  var colors = ["#ff1a1a", "#3366ff", "#33cc33", "#ffff00", "#ff0066", "#ff471a", "#cc0099"];
+  return colors[Math.floor(Math.random() * colors.length)];
 }
 
 app.use("/public", express.static(__dirname + '/public'));
